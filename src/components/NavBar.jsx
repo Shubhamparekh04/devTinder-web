@@ -1,15 +1,40 @@
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { Link, useNavigate } from "react-router-dom";
+import { BASE_URL } from "../utils/constants";
+import axios from "axios";
+import { removeUser } from "../utils/userSlice";
+import { useState } from "react";
 
 const Navbar = () => {
   const user = useSelector((store) => store.user);
-  console.log(user);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const [isLogout, setIsLogout] = useState(false);
+
+  const handleLogout = async () => {
+    try {
+      await axios.post(BASE_URL + "/logout", {}, { withCredentials: true });
+      dispatch(removeUser());
+
+      setIsLogout(true);
+      setTimeout(() => {
+        setIsLogout(false);
+      }, 3000);
+
+      return navigate("/login");
+    } catch (error) {
+      console.error(error.message);
+    }
+  };
 
   return (
     <>
       {/* Navbar-S */}
       <div className="navbar bg-base-300 shadow-sm">
         <div className="flex-1">
-          <a className="text-xl cursor-pointer">DevTinder 🤝</a>
+          <Link to={user ? "/" : "/login"} className="text-xl cursor-pointer">
+            👨‍💻 DevTinder
+          </Link>
         </div>
         {user && (
           <div className="flex gap-2 items-center">
@@ -32,16 +57,18 @@ const Navbar = () => {
                 className="menu menu-sm dropdown-content bg-base-100 rounded-box z-1 mt-3 w-52 p-2 shadow"
               >
                 <li>
-                  <a className="justify-between">
+                  <Link to="/profile" className="justify-between">
                     Profile
-                    <span className="badge">New</span>
-                  </a>
+                  </Link>
                 </li>
                 <li>
-                  <a>Settings</a>
+                  <Link to="/connections">Connections</Link>
                 </li>
                 <li>
-                  <a>Logout</a>
+                  <Link to="/requests">Requests</Link>
+                </li>
+                <li>
+                  <a onClick={handleLogout}>Logout</a>
                 </li>
               </ul>
             </div>
@@ -49,6 +76,14 @@ const Navbar = () => {
         )}
       </div>
       {/* Navbar-E */}
+
+      {isLogout && (
+        <div className="toast toast-top toast-center">
+          <div className="alert alert-success">
+            <span>Logout successfully...!</span>
+          </div>
+        </div>
+      )}
     </>
   );
 };
